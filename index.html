@@ -1,66 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phone Shop</title>
-    
+    <title>My TG Shop</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
     <style>
-        /* Оформление: используем переменные Telegram, чтобы цвета подстраивались под тему (светлую/темную) */
-        body {
-            font-family: sans-serif;
-            background-color: var(--tg-theme-bg-color, #fff);
-            color: var(--tg-theme-text-color, #000);
-            padding: 20px;
-            text-align: center;
-        }
-        .item-card {
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 20px;
-            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-        }
-        .buy-btn {
-            background-color: var(--tg-theme-button-color, #248bed);
-            color: var(--tg-theme-button-text-color, #fff);
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+        body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f0f0f0; }
+        .product { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        button { background: #007aff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:active { background: #005bb5; }
     </style>
 </head>
 <body>
 
-    <h1>Магазин Телефонов</h1>
+    <div class="product">
+        <h2>iPhone 15 Pro</h2>
+        <p>Цена: 99 000₽</p>
+        <button onclick="sendOrder('iPhone 15 Pro')">Заказать</button>
+    </div>
 
-    <div class="item-card">
-        <h3>iPhone 15 Pro</h3>
-        <p>Мощный и стильный смартфон.</p>
-        <p><b>Цена: 120 000 ₽</b></p>
-        <button class="buy-btn" onclick="orderPhone('iPhone 15 Pro')">Заказать</button>
+    <div class="product">
+        <h2>iPhone 14</h2>
+        <p>Цена: 75 000₽</p>
+        <button onclick="sendOrder('iPhone 14')">Заказать</button>
     </div>
 
     <script>
-        // Инициализируем объект Telegram
-        const tg = window.Telegram.WebApp;
+        // Инициализация
+        let tg = window.Telegram.WebApp;
+        tg.expand(); // Развернуть на весь экран
 
-        // Сообщаем Telegram, что приложение готово к работе
-        tg.ready();
-
-        function orderPhone(model) {
-    console.log("Отправка данных..."); // Для отладки
-    tg.sendData("Заказ: " + model); 
-    
-    // Вместо мгновенного закрытия дадим Telegram 500мс на отправку
-    setTimeout(() => {
-        tg.close();
-    }, 500);
-}
+        // Функция отправки
+        function sendOrder(model) {
+            console.log("Попытка отправить заказ: " + model);
+            
+            // Отправляем данные в бот
+            tg.sendData("Заказ: " + model);
+            
+            // Закрываем через полсекунды
+            setTimeout(() => {
+                tg.close();
+            }, 500);
         }
     </script>
 </body>
