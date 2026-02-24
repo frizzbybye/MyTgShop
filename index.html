@@ -53,10 +53,14 @@
         tg.ready();
 
         function orderPhone(model) {
-            // Когда жмем кнопку, отправляем данные обратно боту
-            tg.sendData("Заказ: " + model); 
-            // И закрываем мини-апку
-            tg.close();
+    console.log("Отправка данных..."); // Для отладки
+    tg.sendData("Заказ: " + model); 
+    
+    // Вместо мгновенного закрытия дадим Telegram 500мс на отправку
+    setTimeout(() => {
+        tg.close();
+    }, 500);
+}
         }
     </script>
 </body>
