@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phone Shop</title>
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+        /* Оформление: используем переменные Telegram, чтобы цвета подстраивались под тему (светлую/темную) */
+        body {
+            font-family: sans-serif;
+            background-color: var(--tg-theme-bg-color, #fff);
+            color: var(--tg-theme-text-color, #000);
+            padding: 20px;
+            text-align: center;
+        }
+        .item-card {
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+        }
+        .buy-btn {
+            background-color: var(--tg-theme-button-color, #248bed);
+            color: var(--tg-theme-button-text-color, #fff);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Магазин Телефонов</h1>
+
+    <div class="item-card">
+        <h3>iPhone 15 Pro</h3>
+        <p>Мощный и стильный смартфон.</p>
+        <p><b>Цена: 120 000 ₽</b></p>
+        <button class="buy-btn" onclick="orderPhone('iPhone 15 Pro')">Заказать</button>
+    </div>
+
+    <script>
+        // Инициализируем объект Telegram
+        const tg = window.Telegram.WebApp;
+
+        // Сообщаем Telegram, что приложение готово к работе
+        tg.ready();
+
+        function orderPhone(model) {
+            // Когда жмем кнопку, отправляем данные обратно боту
+            tg.sendData("Заказ: " + model); 
+            // И закрываем мини-апку
+            tg.close();
+        }
+    </script>
+</body>
+</html>
