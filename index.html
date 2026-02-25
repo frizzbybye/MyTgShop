@@ -2,61 +2,38 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My TG Shop</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f0f0f0; }
-        .product { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        button { background: #007aff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; }
-        button:active { background: #005bb5; }
+        .product { background: white; padding: 15px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
+        /* Стили для картинки */
+        img {
+            width: 100%;
+            max-width: 180px;
+            height: auto;
+            border-radius: 10px;
+        }
+
+        button { background: #007aff; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="product">
-        <h2>iPhone 15 Pro</h2>
-        <p>Цена: 99 000₽</p>
-        <button onclick="sendOrder('iPhone 15 Pro')">Заказать</button>
-    </div>
-
-    <div class="product">
-        <h2>iPhone 17 pro max white</h2>
-        <p>Цена: 900₽</p>
-        <button onclick="sendOrder('iPhone 14')">Заказать</button>
-    </div>
-    <div class="product">
-        <h2>iPhone 17 pro white</h2>
-        <p>Цена: 900₽</p>
-        <button onclick="sendOrder('iPhone 15 Pro')">Заказать</button>
-    </div>
-    <div class="product">
-        <h2>iPhone 15 Pro</h2>
-        <p>Цена: 99 000₽</p>
-        <button onclick="sendOrder('iPhone 15 Pro')">Заказать</button>
-    </div>
-    <div class="product">
+        <img src="https://syomastore.ru/wa-data/public/shop/products/05/58/5805/images/28327/28327.970.jpg">
         <h2>iPhone 15 Pro</h2>
         <p>Цена: 99 000₽</p>
         <button onclick="sendOrder('iPhone 15 Pro')">Заказать</button>
     </div>
 
     <script>
-        // Инициализация
         let tg = window.Telegram.WebApp;
-        tg.expand(); // Развернуть на весь экран
+        tg.expand();
 
-        // Функция отправки
         function sendOrder(model) {
-            console.log("Попытка отправить заказ: " + model);
-            
-            // Отправляем данные в бот
             tg.sendData("Заказ: " + model);
-            
-            // Закрываем через полсекунды
-            setTimeout(() => {
-                tg.close();
-            }, 500);
+            setTimeout(() => { tg.close(); }, 500);
         }
     </script>
 </body>
