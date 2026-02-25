@@ -5,45 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f5f5f7; color: #1d1d1f; margin: 0; padding-bottom: 100px; }
-        .header { background: white; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; border-bottom: 1px solid #d2d2d7; }
-        .product-list { padding: 15px; }
-        .product { background: white; border-radius: 18px; padding: 15px; margin-bottom: 15px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .product img { width: 150px; height: auto; margin-bottom: 10px; }
-        .product h2 { font-size: 18px; margin: 10px 0; }
-        .product p { color: #86868b; font-weight: 600; }
-        .btn-add { background: #0071e3; color: white; border: none; padding: 8px 20px; border-radius: 20px; font-weight: 500; cursor: pointer; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f5f5f7; color: #1d1d1f; margin: 0; padding-bottom: 120px; }
+        .header { background: white; padding: 20px; text-align: center; font-size: 22px; font-weight: bold; border-bottom: 1px solid #d2d2d7; position: sticky; top: 0; z-index: 10; }
+        .product-list { padding: 15px; display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .product { background: white; border-radius: 20px; padding: 20px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .product img { width: 100%; max-width: 180px; height: auto; border-radius: 15px; }
+        .product h2 { font-size: 20px; margin: 15px 0 5px; }
+        .product p { color: #0071e3; font-size: 18px; font-weight: 700; margin-bottom: 15px; }
+        .btn-add { background: #0071e3; color: white; border: none; padding: 10px 30px; border-radius: 25px; font-weight: 600; cursor: pointer; width: 100%; }
         
-        /* Корзина внизу */
-        .cart-panel { position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid #d2d2d7; padding: 15px; box-sizing: border-box; display: none; }
-        .form-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #d2d2d7; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
-        .btn-order { background: #34c759; color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-size: 18px; font-weight: bold; }
+        /* Панель корзины */
+        .cart-panel { position: fixed; bottom: 0; width: 100%; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-top: 1px solid #d2d2d7; padding: 20px; box-sizing: border-box; display: none; transition: 0.3s; }
+        .summary-text { font-size: 16px; font-weight: 600; margin-bottom: 15px; display: flex; justify-content: space-between; }
+        .btn-order { background: #34c759; color: white; border: none; width: 100%; padding: 16px; border-radius: 14px; font-size: 18px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="header">iShop</div>
+    <div class="header">Apple Store Mini</div>
 
     <div class="product-list">
         <div class="product">
             <img src="https://syomastore.ru/wa-data/public/shop/products/05/58/5805/images/28327/28327.970.jpg">
             <h2>iPhone 17 Pro Max</h2>
-            <p>990 ₽</p>
-            <button class="btn-add" onclick="addToCart('iPhone 17 Pro Max', 990">Добавить</button>
+            <p>99 900 ₽</p>
+            <button class="btn-add" onclick="addToCart('iPhone 17 Pro Max', 99900)">Добавить</button>
         </div>
 
         <div class="product">
             <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-15-pro-finish-select-202309-6-1inch-naturaltitanium?wid=512&hei=512&fmt=p-jpg&qlt=95&.v=1692846357186">
-            <h2>iPhone 16 Pro</h2>
-            <p>990₽</p>
-            <button class="btn-add" onclick="addToCart('iPhone 16 Pro', 990)">Добавить</button>
+            <h2>iPhone 15 Pro</h2>
+            <p>85 000 ₽</p>
+            <button class="btn-add" onclick="addToCart('iPhone 15 Pro', 85000)">Добавить</button>
         </div>
     </div>
 
     <div id="cart" class="cart-panel">
-        <div id="summary" style="margin-bottom: 10px; font-weight: bold;">Товаров: 0 | Итого: 0 ₽</div>
-        <input type="text" id="userName" class="form-input" placeholder="Ваше имя">
-        <input type="tel" id="userPhone" class="form-input" placeholder="+7 (___) ___-__-__">
+        <div class="summary-text">
+            <span>Итого в корзине:</span>
+            <span id="total-amount">0 ₽</span>
+        </div>
         <button class="btn-order" onclick="sendOrder()">Оформить заказ</button>
     </div>
 
@@ -54,6 +55,10 @@
         let cartItems = [];
         let totalPrice = 0;
 
+        // Авто-определение пользователя (если есть юзернейм)
+        let userNickname = tg.initDataUnsafe?.user?.username ? "@" + tg.initDataUnsafe.user.username : "Аноним";
+        let firstName = tg.initDataUnsafe?.user?.first_name || "Покупатель";
+
         function addToCart(name, price) {
             cartItems.push(name);
             totalPrice += price;
@@ -62,32 +67,25 @@
 
         function updateCartUI() {
             const cartPanel = document.getElementById('cart');
-            const summary = document.getElementById('summary');
+            const totalText = document.getElementById('total-amount');
             
             if (cartItems.length > 0) {
                 cartPanel.style.display = 'block';
-                summary.innerText = `Товаров: ${cartItems.length} | Итого: ${totalPrice.toLocaleString()} ₽`;
+                totalText.innerText = `${totalPrice.toLocaleString()} ₽`;
             }
         }
 
         function sendOrder() {
-            const name = document.getElementById('userName').value;
-            const phone = document.getElementById('userPhone').value;
+            if (cartItems.length === 0) return;
 
-            if (!name || !phone) {
-                alert("Пожалуйста, заполните имя и телефон!");
-                return;
-            }
-
-            // Формируем красивую строку для бота
+            // Собираем данные. Имя и Юзернейм берем автоматически из Telegram!
             let orderData = {
                 products: cartItems.join(", "),
                 total: totalPrice,
-                customer_name: name,
-                customer_phone: phone
+                customer_name: firstName,
+                customer_username: userNickname
             };
 
-            // Отправляем как JSON-строку, чтобы бот мог легко прочитать
             tg.sendData(JSON.stringify(orderData));
             tg.close();
         }
