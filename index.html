@@ -2,38 +2,94 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f0f0f0; }
-        .product { background: white; padding: 15px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f5f5f7; color: #1d1d1f; margin: 0; padding-bottom: 100px; }
+        .header { background: white; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; border-bottom: 1px solid #d2d2d7; }
+        .product-list { padding: 15px; }
+        .product { background: white; border-radius: 18px; padding: 15px; margin-bottom: 15px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .product img { width: 150px; height: auto; margin-bottom: 10px; }
+        .product h2 { font-size: 18px; margin: 10px 0; }
+        .product p { color: #86868b; font-weight: 600; }
+        .btn-add { background: #0071e3; color: white; border: none; padding: 8px 20px; border-radius: 20px; font-weight: 500; cursor: pointer; }
         
-        /* Стили для картинки */
-        img {
-            width: 100%;
-            max-width: 180px;
-            height: auto;
-            border-radius: 10px;
-        }
-
-        button { background: #007aff; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        /* Корзина внизу */
+        .cart-panel { position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid #d2d2d7; padding: 15px; box-sizing: border-box; display: none; }
+        .form-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #d2d2d7; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
+        .btn-order { background: #34c759; color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-size: 18px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="product">
-        <img src="https://syomastore.ru/wa-data/public/shop/products/05/58/5805/images/28327/28327.970.jpg">
-        <h2>iPhone 17 pro max white</h2>
-        <p>Цена: 990 ₽</p>
-        <button onclick="sendOrder('iPhone 17 pro max white')">Заказать</button>
+    <div class="header">iShop</div>
+
+    <div class="product-list">
+        <div class="product">
+            <img src="https://syomastore.ru/wa-data/public/shop/products/05/58/5805/images/28327/28327.970.jpg">
+            <h2>iPhone 17 Pro Max</h2>
+            <p>990 ₽</p>
+            <button class="btn-add" onclick="addToCart('iPhone 17 Pro Max', 990">Добавить</button>
+        </div>
+
+        <div class="product">
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-15-pro-finish-select-202309-6-1inch-naturaltitanium?wid=512&hei=512&fmt=p-jpg&qlt=95&.v=1692846357186">
+            <h2>iPhone 16 Pro</h2>
+            <p>990₽</p>
+            <button class="btn-add" onclick="addToCart('iPhone 16 Pro', 990)">Добавить</button>
+        </div>
+    </div>
+
+    <div id="cart" class="cart-panel">
+        <div id="summary" style="margin-bottom: 10px; font-weight: bold;">Товаров: 0 | Итого: 0 ₽</div>
+        <input type="text" id="userName" class="form-input" placeholder="Ваше имя">
+        <input type="tel" id="userPhone" class="form-input" placeholder="+7 (___) ___-__-__">
+        <button class="btn-order" onclick="sendOrder()">Оформить заказ</button>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
 
-        function sendOrder(model) {
-            tg.sendData("Заказ: " + model);
-            setTimeout(() => { tg.close(); }, 500);
+        let cartItems = [];
+        let totalPrice = 0;
+
+        function addToCart(name, price) {
+            cartItems.push(name);
+            totalPrice += price;
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const cartPanel = document.getElementById('cart');
+            const summary = document.getElementById('summary');
+            
+            if (cartItems.length > 0) {
+                cartPanel.style.display = 'block';
+                summary.innerText = `Товаров: ${cartItems.length} | Итого: ${totalPrice.toLocaleString()} ₽`;
+            }
+        }
+
+        function sendOrder() {
+            const name = document.getElementById('userName').value;
+            const phone = document.getElementById('userPhone').value;
+
+            if (!name || !phone) {
+                alert("Пожалуйста, заполните имя и телефон!");
+                return;
+            }
+
+            // Формируем красивую строку для бота
+            let orderData = {
+                products: cartItems.join(", "),
+                total: totalPrice,
+                customer_name: name,
+                customer_phone: phone
+            };
+
+            // Отправляем как JSON-строку, чтобы бот мог легко прочитать
+            tg.sendData(JSON.stringify(orderData));
+            tg.close();
         }
     </script>
 </body>
