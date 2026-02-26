@@ -35,6 +35,8 @@
             z-index: 100; 
         }
 
+        #loader { text-align: center; padding: 50px; color: #8e8e93; font-size: 16px; }
+
         .product-list { 
             padding: 12px; 
             display: grid; 
@@ -51,16 +53,10 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            position: relative;
         }
 
-        .product img { 
-            width: 100%; 
-            border-radius: 12px; 
-            margin-bottom: 8px; 
-        }
-
-        .product h2 { font-size: 14px; margin: 5px 0; height: 34px; overflow: hidden; }
+        .product img { width: 100%; border-radius: 12px; margin-bottom: 8px; object-fit: contain; height: 140px; }
+        .product h2 { font-size: 14px; margin: 5px 0; height: 34px; overflow: hidden; line-height: 1.2; }
         .product p { color: var(--main-color); font-size: 17px; font-weight: 700; margin: 5px 0 10px 0; }
 
         .controls {
@@ -69,8 +65,8 @@
             justify-content: space-between;
             background: #f2f2f7;
             border-radius: 12px;
-            overflow: hidden;
             height: 40px;
+            overflow: hidden;
         }
 
         .btn-add-main { 
@@ -82,28 +78,28 @@
             font-size: 14px; 
             font-weight: 600; 
             width: 100%; 
+            cursor: pointer;
         }
 
         .btn-minus, .btn-plus {
             background: none;
             border: none;
             color: var(--main-color);
-            font-size: 20px;
-            font-weight: bold;
+            font-size: 22px;
             width: 40px;
             height: 40px;
+            cursor: pointer;
         }
 
         .count-badge { font-weight: bold; font-size: 16px; }
 
-        /* Анимация полета */
         .flying-item {
             position: fixed;
             z-index: 9999;
             pointer-events: none;
+            transition: all 0.7s cubic-bezier(0.19, 1, 0.22, 1);
             border-radius: 10px;
             object-fit: cover;
-            transition: all 0.7s cubic-bezier(0.19, 1, 0.22, 1);
         }
 
         .cart-panel { 
@@ -127,49 +123,22 @@
             border-radius: 14px; 
             font-size: 17px; 
             font-weight: bold; 
-        }
-
-        .input-contact { 
-            width: 100%; 
-            padding: 12px; 
-            margin-bottom: 12px; 
-            border: 1px solid #d2d2d7; 
-            border-radius: 10px; 
-            box-sizing: border-box; 
-            font-size: 16px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
     <div class="header"> iShop</div>
-
-    <div class="product-list">
-        <div class="product">
-            <img src="https://syomastore.ru/wa-data/public/shop/products/05/58/5805/images/28327/28327.970.jpg" id="img-1">
-            <h2>iPhone 17 Pro Max</h2>
-            <p>990 ₽</p>
-            <div id="controls-1">
-                <button class="btn-add-main" onclick="changeCount(1, 'iPhone 17 Pro Max', 990, 1, 'img-1')">Добавить</button>
-            </div>
-        </div>
-
-        <div class="product">
-            <img src="https://appdom.ru/image/cache/catalog/iphone/ip16pro/iphone-16-pro-natural-titanium-2-1000x1000.jpg" id="img-2">
-            <h2>iPhone 16 Pro</h2>
-            <p>990 ₽</p>
-            <div id="controls-2">
-                <button class="btn-add-main" onclick="changeCount(2, 'iPhone 16 Pro', 990, 1, 'img-2')">Добавить</button>
-            </div>
-        </div>
-    </div>
+    
+    <div id="loader">Загрузка витрины...</div>
+    <div class="product-list" id="product-list"></div>
 
     <div id="cart" class="cart-panel">
         <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-weight:bold; font-size: 18px;">
             <span>Итого:</span>
             <span id="total-amount">0 ₽</span>
         </div>
-        <input type="text" id="manual-contact" class="input-contact" placeholder="Ваш @username или телефон" style="display: none;">
         <button class="btn-order" id="order-btn" onclick="sendOrder()">Оформить заказ (0)</button>
     </div>
 
@@ -178,43 +147,82 @@
         tg.expand();
         tg.ready();
 
-        let cart = {}; 
-        let autoUsername = tg.initDataUnsafe?.user?.username;
+        // СЮДА ВСТАВЬТЕ ВАШУ ССЫЛКУ ИЗ AMVERA (Например: https://amvera-frizzby-run-my-bot.amvera.io)
+        const API_URL = "https://amvera-frizzby-run-my-bot.amvera.io"; 
 
+        let cart = {};
+
+        // 1. Загрузка товаров из базы данных бота
+        async function fetchProducts() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Ошибка сети');
+                const products = await response.json();
+                renderProducts(products);
+            } catch (e) {
+                document.getElementById('loader').innerText = "Ошибка: не удалось связаться с сервером";
+                console.error(e);
+            }
+        }
+
+        function renderProducts(products) {
+            const list = document.getElementById('product-list');
+            document.getElementById('loader').style.display = 'none';
+            
+            if (products.length === 0) {
+                document.getElementById('loader').style.display = 'block';
+                document.getElementById('loader').innerText = "Сейчас товаров нет в наличии";
+                return;
+            }
+
+            products.forEach((p, index) => {
+                list.innerHTML += `
+                    <div class="product">
+                        <img src="${p.photo}" id="img-${index}">
+                        <h2>${p.name}</h2>
+                        <p>${p.price} ₽</p>
+                        <div id="controls-${index}">
+                            <button class="btn-add-main" onclick="changeCount(${index}, '${p.name}', ${p.price}, 1, 'img-${index}')">Добавить</button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        // 2. Управление количеством и анимация
         function changeCount(id, name, price, delta, imgId) {
-            if (!cart[id]) {
-                cart[id] = { name: name, price: price, count: 0 };
-            }
-
-            if (delta > 0 && imgId) {
-                animateFly(imgId);
-            }
-
+            if (!cart[id]) cart[id] = { name: name, price: price, count: 0 };
+            
+            if (delta > 0 && imgId) animateFly(imgId);
+            
             cart[id].count += delta;
 
+            const controls = document.getElementById(`controls-${id}`);
             if (cart[id].count <= 0) {
                 delete cart[id];
-                renderButton(id, name, price, imgId);
+                controls.innerHTML = `<button class="btn-add-main" onclick="changeCount(${id}, '${name}', ${price}, 1, '${imgId}')">Добавить</button>`;
             } else {
-                renderControls(id, name, price, imgId);
+                controls.innerHTML = `
+                    <div class="controls">
+                        <button class="btn-minus" onclick="changeCount(${id}, '${name}', ${price}, -1, '${imgId}')">−</button>
+                        <span class="count-badge">${cart[id].count}</span>
+                        <button class="btn-plus" onclick="changeCount(${id}, '${name}', ${price}, 1, '${imgId}')">+</button>
+                    </div>`;
             }
-            updateCartUI();
+            updateCart();
         }
 
         function animateFly(imgId) {
             const img = document.getElementById(imgId);
             const cartBtn = document.getElementById('order-btn');
-            
             const flyImg = img.cloneNode();
             const rect = img.getBoundingClientRect();
             const cartRect = cartBtn.getBoundingClientRect();
 
-            flyImg.classList.add('flying-item');
+            flyImg.className = 'flying-item';
             flyImg.style.top = rect.top + 'px';
             flyImg.style.left = rect.left + 'px';
             flyImg.style.width = rect.width + 'px';
             flyImg.style.height = rect.height + 'px';
-            
             document.body.appendChild(flyImg);
 
             setTimeout(() => {
@@ -222,70 +230,39 @@
                 flyImg.style.left = (cartRect.left + cartRect.width/2) + 'px';
                 flyImg.style.width = '40px';
                 flyImg.style.height = '40px';
-                flyImg.style.opacity = '0.3';
+                flyImg.style.opacity = '0.2';
                 flyImg.style.transform = 'rotate(360deg)';
-            }, 10);
+            }, 50);
 
-            setTimeout(() => {
-                flyImg.remove();
-            }, 700);
+            setTimeout(() => flyImg.remove(), 750);
         }
 
-        function renderButton(id, name, price, imgId) {
-            document.getElementById(`controls-${id}`).innerHTML = 
-                `<button class="btn-add-main" onclick="changeCount(${id}, '${name}', ${price}, 1, '${imgId}')">Добавить</button>`;
-        }
-
-        function renderControls(id, name, price, imgId) {
-            document.getElementById(`controls-${id}`).innerHTML = `
-                <div class="controls">
-                    <button class="btn-minus" onclick="changeCount(${id}, '${name}', ${price}, -1, '${imgId}')">−</button>
-                    <span class="count-badge">${cart[id].count}</span>
-                    <button class="btn-plus" onclick="changeCount(${id}, '${name}', ${price}, 1, '${imgId}')">+</button>
-                </div>`;
-        }
-
-        function updateCartUI() {
-            let total = 0;
-            let itemCount = 0;
+        function updateCart() {
+            let total = 0, count = 0;
             for (let id in cart) {
                 total += cart[id].price * cart[id].count;
-                itemCount += cart[id].count;
+                count += cart[id].count;
             }
-
-            const cartPanel = document.getElementById('cart');
-            if (itemCount > 0) {
-                cartPanel.style.display = 'block';
-                document.getElementById('total-amount').innerText = `${total.toLocaleString()} ₽`;
-                document.getElementById('order-btn').innerText = `Оформить заказ (${itemCount})`;
-            } else {
-                cartPanel.style.display = 'none';
-            }
-            
-            if (!autoUsername) document.getElementById('manual-contact').style.display = 'block';
+            document.getElementById('cart').style.display = count > 0 ? 'block' : 'none';
+            document.getElementById('total-amount').innerText = total.toLocaleString() + ' ₽';
+            document.getElementById('order-btn').innerText = `Оформить заказ (${count})`;
         }
 
+        // 3. Отправка заказа в бот
         function sendOrder() {
-            let contact = autoUsername ? "@" + autoUsername : document.getElementById('manual-contact').value;
-            if (!contact || contact === "@") {
-                tg.showAlert("Пожалуйста, укажите контактные данные!");
-                return;
-            }
-
-            let itemsSummary = Object.values(cart)
-                .map(item => `${item.name} (x${item.count})`)
-                .join(", ");
-
-            let totalPrice = Object.values(cart).reduce((sum, item) => sum + (item.price * item.count), 0);
-
+            let summary = Object.values(cart).map(i => `${i.name} (x${i.count})`).join(", ");
+            let total = Object.values(cart).reduce((s, i) => s + (i.price * i.count), 0);
+            
             tg.sendData(JSON.stringify({
-                products: itemsSummary,
-                total: totalPrice,
+                products: summary,
+                total: total,
                 customer_name: tg.initDataUnsafe?.user?.first_name || "Клиент",
-                customer_username: contact
+                customer_username: "@" + (tg.initDataUnsafe?.user?.username || "unknown")
             }));
             tg.close();
         }
+
+        fetchProducts();
     </script>
 </body>
 </html>
