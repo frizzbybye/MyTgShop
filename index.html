@@ -2,16 +2,24 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        :root {
+            --main-color: #0071e3;
+            --bg-color: #f5f5f7;
+            --card-bg: #ffffff;
+            --text-color: #1d1d1f;
+        }
+
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background-color: #f5f5f7; 
-            color: #1d1d1f; 
+            background-color: var(--bg-color); 
+            color: var(--text-color); 
             margin: 0; 
-            padding-bottom: 160px; 
+            padding-bottom: 120px; 
             -webkit-tap-highlight-color: transparent;
+            user-select: none;
         }
 
         .header { 
@@ -19,12 +27,12 @@
             backdrop-filter: blur(20px); 
             padding: 15px; 
             text-align: center; 
-            font-size: 18px; 
-            font-weight: bold; 
+            font-size: 20px; 
+            font-weight: 600; 
             border-bottom: 1px solid #d2d2d7; 
             position: sticky; 
             top: 0; 
-            z-index: 10; 
+            z-index: 100; 
         }
 
         .product-list { 
@@ -35,7 +43,7 @@
         }
 
         .product { 
-            background: white; 
+            background: var(--card-bg); 
             border-radius: 20px; 
             padding: 12px; 
             text-align: center; 
@@ -43,49 +51,60 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            position: relative;
         }
 
-        .product img { width: 100%; border-radius: 12px; margin-bottom: 8px; }
+        .product img { 
+            width: 100%; 
+            border-radius: 12px; 
+            margin-bottom: 8px; 
+        }
 
         .product h2 { font-size: 14px; margin: 5px 0; height: 34px; overflow: hidden; }
+        .product p { color: var(--main-color); font-size: 17px; font-weight: 700; margin: 5px 0 10px 0; }
 
-        .product p { color: #0071e3; font-size: 16px; font-weight: 700; margin: 5px 0 10px 0; }
-
-        /* Контейнер для кнопок управления количеством */
         .controls {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn-action {
-            background: #0071e3;
-            color: white;
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            justify-content: space-between;
+            background: #f2f2f7;
+            border-radius: 12px;
+            overflow: hidden;
+            height: 40px;
         }
 
         .btn-add-main { 
-            background: #0071e3; 
+            background: var(--main-color); 
             color: white; 
             border: none; 
-            padding: 10px; 
+            height: 40px;
             border-radius: 12px; 
-            font-size: 13px; 
+            font-size: 14px; 
             font-weight: 600; 
             width: 100%; 
         }
 
-        .count-badge { font-weight: bold; font-size: 16px; min-width: 20px; }
+        .btn-minus, .btn-plus {
+            background: none;
+            border: none;
+            color: var(--main-color);
+            font-size: 20px;
+            font-weight: bold;
+            width: 40px;
+            height: 40px;
+        }
+
+        .count-badge { font-weight: bold; font-size: 16px; }
+
+        /* Анимация полета */
+        .flying-item {
+            position: fixed;
+            z-index: 9999;
+            pointer-events: none;
+            border-radius: 10px;
+            object-fit: cover;
+            transition: all 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+        }
 
         .cart-panel { 
             position: fixed; 
@@ -96,98 +115,162 @@
             padding: 20px; 
             box-sizing: border-box; 
             display: none; 
+            z-index: 200;
         }
 
-        .btn-order { background: #34c759; color: white; border: none; width: 100%; padding: 15px; border-radius: 14px; font-size: 17px; font-weight: bold; }
-        
-        .input-contact { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #d2d2d7; border-radius: 10px; box-sizing: border-box; display: none; }
+        .btn-order { 
+            background: #34c759; 
+            color: white; 
+            border: none; 
+            width: 100%; 
+            padding: 16px; 
+            border-radius: 14px; 
+            font-size: 17px; 
+            font-weight: bold; 
+        }
+
+        .input-contact { 
+            width: 100%; 
+            padding: 12px; 
+            margin-bottom: 12px; 
+            border: 1px solid #d2d2d7; 
+            border-radius: 10px; 
+            box-sizing: border-box; 
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
 
-    <div class="header"> Store</div>
+    <div class="header"> iShop</div>
 
     <div class="product-list">
-        <div class="product" id="prod-1">
-            <img src="https://syomastore.ru/wa-data/public/shop/products/05/58/5805/images/28327/28327.970.jpg">
+        <div class="product">
+            <img src="https://syomastore.ru/wa-data/public/shop/products/05/58/5805/images/28327/28327.970.jpg" id="img-1">
             <h2>iPhone 17 Pro Max</h2>
             <p>990 ₽</p>
             <div id="controls-1">
-                <button class="btn-add-main" onclick="changeCount(1, 'iPhone 17 Pro Max', 990, 1)">Добавить</button>
+                <button class="btn-add-main" onclick="changeCount(1, 'iPhone 17 Pro Max', 990, 1, 'img-1')">Добавить</button>
             </div>
         </div>
 
-        <div class="product" id="prod-2">
-            <img src="https://appdom.ru/image/cache/catalog/iphone/ip16pro/iphone-16-pro-natural-titanium-2-1000x1000.jpg">
+        <div class="product">
+            <img src="https://appdom.ru/image/cache/catalog/iphone/ip16pro/iphone-16-pro-natural-titanium-2-1000x1000.jpg" id="img-2">
             <h2>iPhone 16 Pro</h2>
             <p>990 ₽</p>
             <div id="controls-2">
-                <button class="btn-add-main" onclick="changeCount(2, 'iPhone 16 Pro', 990, 1)">Добавить</button>
+                <button class="btn-add-main" onclick="changeCount(2, 'iPhone 16 Pro', 990, 1, 'img-2')">Добавить</button>
             </div>
         </div>
     </div>
 
     <div id="cart" class="cart-panel">
-        <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-weight:bold;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-weight:bold; font-size: 18px;">
             <span>Итого:</span>
             <span id="total-amount">0 ₽</span>
         </div>
-        <input type="text" id="manual-contact" class="input-contact" placeholder="Ваш @username или телефон">
-        <button class="btn-order" onclick="sendOrder()">Оформить заказ</button>
+        <input type="text" id="manual-contact" class="input-contact" placeholder="Ваш @username или телефон" style="display: none;">
+        <button class="btn-order" id="order-btn" onclick="sendOrder()">Оформить заказ (0)</button>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
-        let cart = {}; // Храним товары: { id: {name, price, count} }
+        tg.expand();
+        tg.ready();
+
+        let cart = {}; 
         let autoUsername = tg.initDataUnsafe?.user?.username;
 
-        function changeCount(id, name, price, delta) {
+        function changeCount(id, name, price, delta, imgId) {
             if (!cart[id]) {
                 cart[id] = { name: name, price: price, count: 0 };
+            }
+
+            if (delta > 0 && imgId) {
+                animateFly(imgId);
             }
 
             cart[id].count += delta;
 
             if (cart[id].count <= 0) {
                 delete cart[id];
-                renderButton(id, name, price);
+                renderButton(id, name, price, imgId);
             } else {
-                renderControls(id, name, price);
+                renderControls(id, name, price, imgId);
             }
             updateCartUI();
         }
 
-        function renderButton(id, name, price) {
-            document.getElementById(`controls-${id}`).innerHTML = 
-                `<button class="btn-add-main" onclick="changeCount(${id}, '${name}', ${price}, 1)">Добавить</button>`;
+        function animateFly(imgId) {
+            const img = document.getElementById(imgId);
+            const cartBtn = document.getElementById('order-btn');
+            
+            const flyImg = img.cloneNode();
+            const rect = img.getBoundingClientRect();
+            const cartRect = cartBtn.getBoundingClientRect();
+
+            flyImg.classList.add('flying-item');
+            flyImg.style.top = rect.top + 'px';
+            flyImg.style.left = rect.left + 'px';
+            flyImg.style.width = rect.width + 'px';
+            flyImg.style.height = rect.height + 'px';
+            
+            document.body.appendChild(flyImg);
+
+            setTimeout(() => {
+                flyImg.style.top = (cartRect.top) + 'px';
+                flyImg.style.left = (cartRect.left + cartRect.width/2) + 'px';
+                flyImg.style.width = '40px';
+                flyImg.style.height = '40px';
+                flyImg.style.opacity = '0.3';
+                flyImg.style.transform = 'rotate(360deg)';
+            }, 10);
+
+            setTimeout(() => {
+                flyImg.remove();
+            }, 700);
         }
 
-        function renderControls(id, name, price) {
+        function renderButton(id, name, price, imgId) {
+            document.getElementById(`controls-${id}`).innerHTML = 
+                `<button class="btn-add-main" onclick="changeCount(${id}, '${name}', ${price}, 1, '${imgId}')">Добавить</button>`;
+        }
+
+        function renderControls(id, name, price, imgId) {
             document.getElementById(`controls-${id}`).innerHTML = `
                 <div class="controls">
-                    <button class="btn-action" onclick="changeCount(${id}, '${name}', ${price}, -1)">−</button>
+                    <button class="btn-minus" onclick="changeCount(${id}, '${name}', ${price}, -1, '${imgId}')">−</button>
                     <span class="count-badge">${cart[id].count}</span>
-                    <button class="btn-action" onclick="changeCount(${id}, '${name}', ${price}, 1)">+</button>
+                    <button class="btn-plus" onclick="changeCount(${id}, '${name}', ${price}, 1, '${imgId}')">+</button>
                 </div>`;
         }
 
         function updateCartUI() {
             let total = 0;
-            let hasItems = false;
+            let itemCount = 0;
             for (let id in cart) {
                 total += cart[id].price * cart[id].count;
-                hasItems = true;
+                itemCount += cart[id].count;
             }
 
-            document.getElementById('cart').style.display = hasItems ? 'block' : 'none';
-            document.getElementById('total-amount').innerText = `${total.toLocaleString()} ₽`;
+            const cartPanel = document.getElementById('cart');
+            if (itemCount > 0) {
+                cartPanel.style.display = 'block';
+                document.getElementById('total-amount').innerText = `${total.toLocaleString()} ₽`;
+                document.getElementById('order-btn').innerText = `Оформить заказ (${itemCount})`;
+            } else {
+                cartPanel.style.display = 'none';
+            }
             
             if (!autoUsername) document.getElementById('manual-contact').style.display = 'block';
         }
 
         function sendOrder() {
             let contact = autoUsername ? "@" + autoUsername : document.getElementById('manual-contact').value;
-            if (!contact || contact === "@") { alert("Укажите контакт!"); return; }
+            if (!contact || contact === "@") {
+                tg.showAlert("Пожалуйста, укажите контактные данные!");
+                return;
+            }
 
             let itemsSummary = Object.values(cart)
                 .map(item => `${item.name} (x${item.count})`)
@@ -198,7 +281,7 @@
             tg.sendData(JSON.stringify({
                 products: itemsSummary,
                 total: totalPrice,
-                customer_name: tg.initDataUnsafe?.user?.first_name || "Покупатель",
+                customer_name: tg.initDataUnsafe?.user?.first_name || "Клиент",
                 customer_username: contact
             }));
             tg.close();
