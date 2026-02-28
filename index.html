@@ -5,101 +5,76 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --main-color: #0071e3; --bg-color: #f5f5f7; --card-bg: #ffffff; --text-color: #1d1d1f; }
-        body { font-family: -apple-system, system-ui, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding-bottom: 180px; user-select: none; }
-        .header { background: rgba(255,255,255,0.8); backdrop-filter: blur(20px); padding: 15px; text-align: center; font-size: 20px; font-weight: 600; border-bottom: 1px solid #d2d2d7; position: sticky; top: 0; z-index: 100; }
-        #loader { text-align: center; padding: 50px; color: #8e8e93; }
-        .product-list { padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .product { background: var(--card-bg); border-radius: 20px; padding: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; }
-        .product img { width: 100%; height: 140px; object-fit: contain; border-radius: 12px; }
-        .btn-add-main { background: var(--main-color); color: white; border: none; height: 40px; border-radius: 12px; font-weight: 600; width: 100%; margin-top: 10px; cursor: pointer; }
-        .cart-panel { position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid #d2d2d7; padding: 15px; box-sizing: border-box; display: none; z-index: 200; }
-        .input-field { width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid #d2d2d7; border-radius: 12px; font-size: 16px; box-sizing: border-box; background: #f5f5f7; }
-        .btn-order { background: #34c759; color: white; border: none; width: 100%; padding: 16px; border-radius: 14px; font-size: 17px; font-weight: bold; cursor: pointer; }
+        :root { --main: #0071e3; --bg: #f5f5f7; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 200px; user-select: none; }
+        .header { background: white; padding: 15px; text-align: center; border-bottom: 1px solid #ddd; font-weight: bold; position: sticky; top: 0; z-index: 10; }
+        .product-list { padding: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .product { background: white; border-radius: 15px; padding: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .product img { width: 100%; height: 120px; object-fit: contain; }
+        .btn-add { background: var(--main); color: white; border: none; width: 100%; padding: 10px; border-radius: 10px; margin-top: 10px; font-weight: 600; }
+        .cart-panel { position: fixed; bottom: 0; width: 100%; background: white; padding: 15px; border-top: 1px solid #ddd; display: none; box-sizing: border-box; }
+        .input-field { width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box; }
+        .btn-order { background: #34c759; color: white; border: none; width: 100%; padding: 16px; border-radius: 12px; font-weight: bold; font-size: 16px; width: 100%; }
     </style>
 </head>
 <body>
     <div class="header"> iShop</div>
-    <div id="loader">Загрузка товаров...</div>
-    <div id="product-list" class="product-list"></div>
+    <div id="list" class="product-list"></div>
 
     <div id="cart" class="cart-panel">
-        <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-weight:bold; font-size: 18px;">
-            <span>Итого:</span><span id="total-amount">0 ₽</span>
-        </div>
-        
-        <input type="text" id="cust-name" class="input-field" placeholder="Ваше имя">
-        <input type="tel" id="cust-phone" class="input-field" placeholder="Номер телефона">
-        
-        <button class="btn-order" id="order-btn" onclick="sendOrder()">Оформить заказ (0)</button>
+        <div style="display:flex; justify-content:space-between; margin-bottom:12px;"><b>Итого:</b><b id="total">0 ₽</b></div>
+        <input type="text" id="name" class="input-field" placeholder="Ваше имя">
+        <input type="text" id="username" class="input-field" placeholder="Ваш @username в Telegram">
+        <button class="btn-order" id="order-btn" onclick="send()">Заказать (0)</button>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
-        const API_URL = "https://my-bot-frizzby.amvera.io/api/products"; 
         let cart = {};
 
-        async function fetchProducts() {
-            try {
-                const response = await fetch(API_URL);
-                const products = await response.json();
-                renderProducts(products);
-            } catch (e) {
-                document.getElementById('loader').innerText = "Ошибка сервера";
-            }
-        }
-
-        function renderProducts(products) {
-            const list = document.getElementById('product-list');
-            document.getElementById('loader').style.display = 'none';
+        async function load() {
+            const r = await fetch("https://my-bot-frizzby.amvera.io/api/products");
+            const products = await r.json();
+            const list = document.getElementById('list');
             products.forEach((p, i) => {
-                list.innerHTML += `
-                    <div class="product">
-                        <img src="${p.photo}">
-                        <h2>${p.name}</h2>
-                        <p>${p.price} ₽</p>
-                        <button class="btn-add-main" onclick="changeCount(${i},'${p.name}',${p.price})">Добавить</button>
-                    </div>`;
+                list.innerHTML += `<div class="product">
+                    <img src="${p.photo}">
+                    <h3>${p.name}</h3>
+                    <p>${p.price} ₽</p>
+                    <button class="btn-add" onclick="add(${i},'${p.name}',${p.price})">В корзину</button>
+                </div>`;
             });
         }
 
-        function changeCount(id, name, price) {
+        function add(id, name, price) {
             if (!cart[id]) cart[id] = { name, price, count: 0 };
             cart[id].count++;
-            updateCart();
+            update();
         }
 
-        function updateCart() {
+        function update() {
             let total = 0, count = 0;
-            for (let id in cart) { total += cart[id].price * cart[id].count; count += cart[id].count; }
+            for (let k in cart) { total += cart[k].price * cart[k].count; count += cart[k].count; }
             document.getElementById('cart').style.display = count > 0 ? 'block' : 'none';
-            document.getElementById('total-amount').innerText = total.toLocaleString() + ' ₽';
-            document.getElementById('order-btn').innerText = `Оформить заказ (${count})`;
+            document.getElementById('total').innerText = total + ' ₽';
+            document.getElementById('order-btn').innerText = `Заказать (${count})`;
         }
 
-        function sendOrder() {
-            const name = document.getElementById('cust-name').value.trim();
-            const phone = document.getElementById('cust-phone').value.trim();
-            
-            if (!name || !phone) {
-                alert("Пожалуйста, введите имя и телефон для связи!");
-                return;
-            }
-            
-            let summary = Object.values(cart).map(i => `${i.name} (x${i.count})`).join(", ");
-            let total = Object.values(cart).reduce((s, i) => s + (i.price * i.count), 0);
-            
+        function send() {
+            const n = document.getElementById('name').value.trim();
+            const u = document.getElementById('username').value.trim();
+            if (!n || !u) return alert("Заполните Имя и Username!");
+
             tg.sendData(JSON.stringify({
-                products: summary,
-                total: total,
-                customer_name: name,
-                customer_phone: phone,
-                customer_username: "@" + (tg.initDataUnsafe?.user?.username || "unknown")
+                products: Object.values(cart).map(i => `${i.name} x${i.count}`).join(", "),
+                total: document.getElementById('total').innerText,
+                customer_name: n,
+                customer_username: u
             }));
             tg.close();
         }
-        fetchProducts();
+        load();
     </script>
 </body>
 </html>
