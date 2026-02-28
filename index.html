@@ -17,7 +17,7 @@
             background-color: var(--bg-color); 
             color: var(--text-color); 
             margin: 0; 
-            padding-bottom: 120px; 
+            padding-bottom: 180px; /* Увеличили отступ для новых полей */
             -webkit-tap-highlight-color: transparent;
             user-select: none;
         }
@@ -93,25 +93,35 @@
 
         .count-badge { font-weight: bold; font-size: 16px; }
 
-        .flying-item {
-            position: fixed;
-            z-index: 9999;
-            pointer-events: none;
-            transition: all 0.7s cubic-bezier(0.19, 1, 0.22, 1);
-            border-radius: 10px;
-            object-fit: cover;
-        }
-
         .cart-panel { 
             position: fixed; 
             bottom: 0; 
             width: 100%; 
             background: white; 
             border-top: 1px solid #d2d2d7; 
-            padding: 20px; 
+            padding: 15px; 
             box-sizing: border-box; 
             display: none; 
             z-index: 200;
+        }
+
+        /* Стили для новых полей ввода */
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 8px;
+            border: 1px solid #d2d2d7;
+            border-radius: 12px;
+            font-size: 16px;
+            box-sizing: border-box;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--main-color);
+            background-color: #ffffff;
         }
 
         .btn-order { 
@@ -124,6 +134,16 @@
             font-size: 17px; 
             font-weight: bold; 
             cursor: pointer;
+            margin-top: 5px;
+        }
+
+        .flying-item {
+            position: fixed;
+            z-index: 9999;
+            pointer-events: none;
+            transition: all 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+            border-radius: 10px;
+            object-fit: cover;
         }
     </style>
 </head>
@@ -135,10 +155,14 @@
     <div class="product-list" id="product-list"></div>
 
     <div id="cart" class="cart-panel">
-        <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-weight:bold; font-size: 18px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-weight:bold; font-size: 18px;">
             <span>Итого:</span>
             <span id="total-amount">0 ₽</span>
         </div>
+        
+        <input type="text" id="cust-name" class="input-field" placeholder="Ваше имя">
+        <input type="tel" id="cust-phone" class="input-field" placeholder="Номер телефона">
+        
         <button class="btn-order" id="order-btn" onclick="sendOrder()">Оформить заказ (0)</button>
     </div>
 
@@ -147,12 +171,10 @@
         tg.expand();
         tg.ready();
 
-        // СЮДА ВСТАВЬТЕ ВАШУ ССЫЛКУ ИЗ AMVERA (Например: https://amvera-frizzby-run-my-bot.amvera.io)
         const API_URL = "https://my-bot-frizzby.amvera.io/api/products"; 
 
         let cart = {};
 
-        // 1. Загрузка товаров из базы данных бота
         async function fetchProducts() {
             try {
                 const response = await fetch(API_URL);
@@ -161,7 +183,6 @@
                 renderProducts(products);
             } catch (e) {
                 document.getElementById('loader').innerText = "Ошибка: не удалось связаться с сервером";
-                console.error(e);
             }
         }
 
@@ -188,12 +209,9 @@
             });
         }
 
-        // 2. Управление количеством и анимация
         function changeCount(id, name, price, delta, imgId) {
             if (!cart[id]) cart[id] = { name: name, price: price, count: 0 };
-            
             if (delta > 0 && imgId) animateFly(imgId);
-            
             cart[id].count += delta;
 
             const controls = document.getElementById(`controls-${id}`);
@@ -248,15 +266,26 @@
             document.getElementById('order-btn').innerText = `Оформить заказ (${count})`;
         }
 
-        // 3. Отправка заказа в бот
+        // Обновленная функция отправки заказа с ручным вводом данных
         function sendOrder() {
+            const nameInput = document.getElementById('cust-name').value.trim();
+            const phoneInput = document.getElementById('cust-phone').value.trim();
+
+            // Проверка заполнения полей
+            if (!nameInput || !phoneInput) {
+                alert("Пожалуйста, заполните имя и телефон для связи!");
+                return;
+            }
+
             let summary = Object.values(cart).map(i => `${i.name} (x${i.count})`).join(", ");
             let total = Object.values(cart).reduce((s, i) => s + (i.price * i.count), 0);
             
+            // Отправляем данные, которые ввел пользователь
             tg.sendData(JSON.stringify({
                 products: summary,
                 total: total,
-                customer_name: tg.initDataUnsafe?.user?.first_name || "Клиент",
+                customer_name: nameInput,
+                customer_phone: phoneInput,
                 customer_username: "@" + (tg.initDataUnsafe?.user?.username || "unknown")
             }));
             tg.close();
